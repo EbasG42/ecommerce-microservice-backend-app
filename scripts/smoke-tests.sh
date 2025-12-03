@@ -4,6 +4,16 @@
 
 set -e
 
+# Configurar PATH para incluir ubicaciones comunes de kubectl
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
+# Verificar que kubectl esté disponible
+if ! command -v kubectl &> /dev/null; then
+    echo "❌ Error: kubectl no está instalado o no está en el PATH"
+    echo "Por favor, instala kubectl o agrega su ubicación al PATH"
+    exit 1
+fi
+
 NAMESPACE="${1:-dev}"
 
 if [ -z "$NAMESPACE" ]; then
@@ -18,30 +28,57 @@ echo "🧪 Ejecutando smoke tests en namespace ${NAMESPACE}..."
 check_health() {
     local SERVICE=$1
     local PORT=${2:-8080}
-    local PATH=${3:-/actuator/health}
+    local HEALTH_PATH=${3:-/actuator/health}
     
     echo "🔍 Verificando health de ${SERVICE}..."
     
-    # Esperar a que el pod esté listo
-    kubectl wait --for=condition=ready pod \
-        -l app="${SERVICE}" \
-        -n "${NAMESPACE}" \
-        --timeout=120s || {
-        echo "❌ Pod de ${SERVICE} no está listo"
-        return 1
-    }
+    # Verificar que al menos un pod esté en estado Running
+    READY_PODS=$(kubectl get pods -l app="${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' 2>/dev/null || echo "")
     
-    # Obtener un pod
-    POD=$(kubectl get pod -l app="${SERVICE}" -n "${NAMESPACE}" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
-    
-    if [ -z "$POD" ]; then
-        echo "❌ No se encontró pod para ${SERVICE}"
-        return 1
+    if [ -z "$READY_PODS" ]; then
+        # Intentar esperar a que al menos un pod esté listo
+        kubectl wait --for=condition=ready pod \
+            -l app="${SERVICE}" \
+            -n "${NAMESPACE}" \
+            --timeout=30s 2>/dev/null || {
+            echo "❌ Pod de ${SERVICE} no está listo"
+            return 1
+        }
     fi
     
-    # Verificar health endpoint
-    if kubectl exec -n "${NAMESPACE}" "${POD}" -- \
-        curl -f "http://localhost:${PORT}${PATH}" > /dev/null 2>&1; then
+    # Verificar health endpoint usando port-forward al servicio
+    # Usar un puerto local único basado en el puerto del servicio + offset
+    # Esto evita conflictos cuando múltiples servicios usan el mismo puerto
+    LOCAL_PORT=$((10000 + PORT))
+    
+    # Limpiar cualquier port-forward anterior en el mismo puerto
+    pkill -f "port-forward.*${LOCAL_PORT}" 2>/dev/null || true
+    sleep 1
+    
+    # Iniciar port-forward al servicio (más confiable que al pod)
+    kubectl port-forward -n "${NAMESPACE}" "svc/${SERVICE}" "${LOCAL_PORT}:${PORT}" > /dev/null 2>&1 &
+    PF_PID=$!
+    
+    # Esperar a que el port-forward esté listo
+    # Algunos servicios necesitan más tiempo para iniciar
+    sleep 8
+    
+    # Verificar health endpoint con múltiples intentos
+    HEALTH_CHECK_RESULT=1
+    for i in {1..5}; do
+        if curl -sf --max-time 5 "http://localhost:${LOCAL_PORT}${HEALTH_PATH}" > /dev/null 2>&1; then
+            HEALTH_CHECK_RESULT=0
+            break
+        fi
+        sleep 2
+    done
+    
+    # Limpiar port-forward
+    kill $PF_PID 2>/dev/null || true
+    wait $PF_PID 2>/dev/null || true
+    sleep 1
+    
+    if [ $HEALTH_CHECK_RESULT -eq 0 ]; then
         echo "✅ Health check de ${SERVICE} exitoso"
         return 0
     else
@@ -50,26 +87,31 @@ check_health() {
     fi
 }
 
-# Lista de servicios a verificar
+# Lista de servicios a verificar con sus context paths
+# Formato: "service-name:port:context-path"
+# Si no se especifica context-path, se usa /actuator/health
 SERVICES=(
-    "service-discovery:8761"
-    "cloud-config-server:8888"
-    "api-gateway:8080"
-    "user-service:8081"
-    "product-service:8082"
-    "favourite-service:8083"
-    "order-service:8084"
-    "shipping-service:8085"
-    "payment-service:8086"
+    "service-discovery:8761:/actuator/health"
+    "cloud-config-server:8888:/actuator/health"
+    "api-gateway:8080:/actuator/health"
+    "user-service:8081:/user-service/actuator/health"
+    "product-service:8082:/product-service/actuator/health"
+    "favourite-service:8083:/favourite-service/actuator/health"
+    "order-service:8084:/order-service/actuator/health"
+    "shipping-service:8085:/shipping-service/actuator/health"
+    "payment-service:8086:/payment-service/actuator/health"
 )
 
 FAILED_TESTS=0
 
-for SERVICE_PORT in "${SERVICES[@]}"; do
-    SERVICE=$(echo "$SERVICE_PORT" | cut -d: -f1)
-    PORT=$(echo "$SERVICE_PORT" | cut -d: -f2)
+for SERVICE_PORT_PATH in "${SERVICES[@]}"; do
+    SERVICE=$(echo "$SERVICE_PORT_PATH" | cut -d: -f1)
+    PORT=$(echo "$SERVICE_PORT_PATH" | cut -d: -f2)
+    HEALTH_PATH=$(echo "$SERVICE_PORT_PATH" | cut -d: -f3)
+    # Si no se especificó HEALTH_PATH, usar el default
+    HEALTH_PATH=${HEALTH_PATH:-/actuator/health}
     
-    if ! check_health "$SERVICE" "$PORT"; then
+    if ! check_health "$SERVICE" "$PORT" "$HEALTH_PATH"; then
         FAILED_TESTS=$((FAILED_TESTS + 1))
     fi
 done
