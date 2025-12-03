@@ -36,3 +36,20 @@ backups/
 
 # Test results
 load-tests/results/
+
+# Archivos grandes que no deben subirse
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.pdf
+reports/
+*.html
+*.png
+*.jpg
+*.jpeg
+
+# Archivos temporales de documentaciÃ³n
+README_KUBERNETES_ADDITION.md
+*.backup
