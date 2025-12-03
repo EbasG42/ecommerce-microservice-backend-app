@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-gateway
+  namespace: dev
+spec:
+  podSelector:
+    matchLabels:
+      app: api-gateway
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          tier: business
+    ports:
+    - protocol: TCP
+      port: 8081  # user-service
+    - protocol: TCP
+      port: 8082  # product-service
+    - protocol: TCP
+      port: 8083  # favourite-service
+    - protocol: TCP
+      port: 8084  # order-service
+    - protocol: TCP
+      port: 8085  # shipping-service
+    - protocol: TCP
+      port: 8086  # payment-service
+  - to:
+    - podSelector:
+        matchLabels:
+          app: service-discovery
+    ports:
+    - protocol: TCP
+      port: 8761
+  - to:
+    - podSelector:
+        matchLabels:
+          app: cloud-config-server
+    ports:
+    - protocol: TCP
+      port: 8888
+  - ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+

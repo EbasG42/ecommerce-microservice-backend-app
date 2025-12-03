@@ -1,0 +1,86 @@
+{{- range $service, $config := .Values }}
+{{- if and (hasKey $config "enabled") (eq $config.enabled true) (hasKey $config "image") }}
+{{- $serviceName := $service | lower | replace "Service" "-service" | replace "Gateway" "-gateway" | replace "Client" "-client" | replace "Discovery" "-discovery" | replace "Server" "-server" }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    app: {{ $serviceName }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+spec:
+  replicas: {{ $config.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ $serviceName }}
+  template:
+    metadata:
+      labels:
+        app: {{ $serviceName }}
+        version: {{ $.Values.global.imageTag }}
+    spec:
+      serviceAccountName: {{ $serviceName }}-sa
+      securityContext:
+        runAsNonRoot: {{ $.Values.global.securityContext.runAsNonRoot }}
+        runAsUser: {{ $.Values.global.securityContext.runAsUser }}
+        fsGroup: {{ $.Values.global.securityContext.fsGroup }}
+      containers:
+      - name: {{ $serviceName }}
+        image: "{{ $config.image.repository }}:{{ $config.image.tag }}"
+        imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+        ports:
+        - containerPort: {{ $config.service.port }}
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes"
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          value: {{ $.Values.global.eureka.url | quote }}
+        - name: SPRING_CLOUD_CONFIG_URI
+          value: {{ $.Values.global.cloudConfig.url | quote }}
+        {{- if hasKey $config "database" }}
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://postgres:5432/{{ $config.database.name }}"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ $serviceName }}-secret
+              key: database.username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ $serviceName }}-secret
+              key: database.password
+        {{- end }}
+        resources:
+          {{- toYaml ($config.resources | default $.Values.global.resources) | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: {{ $config.service.port }}
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: {{ $config.service.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+{{- end }}
+{{- end }}
+

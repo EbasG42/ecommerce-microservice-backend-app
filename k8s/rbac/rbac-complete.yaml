@@ -1,0 +1,193 @@
+# Service Accounts para cada microservicio
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-gateway-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: user-service-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: product-service-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: order-service-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: payment-service-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: shipping-service-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: favourite-service-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-discovery-sa
+  namespace: dev
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloud-config-server-sa
+  namespace: dev
+---
+# Roles con permisos mínimos
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: microservice-role
+  namespace: dev
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list"]
+---
+# Role Bindings
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: api-gateway-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: api-gateway-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: user-service-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: user-service-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: product-service-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: product-service-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: order-service-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: order-service-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payment-service-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: payment-service-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: shipping-service-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: shipping-service-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: favourite-service-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: favourite-service-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: service-discovery-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: service-discovery-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cloud-config-server-binding
+  namespace: dev
+subjects:
+- kind: ServiceAccount
+  name: cloud-config-server-sa
+  namespace: dev
+roleRef:
+  kind: Role
+  name: microservice-role
+  apiGroup: rbac.authorization.k8s.io
+

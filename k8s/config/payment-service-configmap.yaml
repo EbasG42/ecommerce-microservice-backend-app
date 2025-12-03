@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-service-config
+  namespace: dev
+  labels:
+    app: payment-service
+data:
+  application.yml: |
+    server:
+      port: 8086
+    
+    spring:
+      application:
+        name: PAYMENT-SERVICE
+      datasource:
+        url: jdbc:postgresql://postgres:5432/paymentdb
+        driver-class-name: org.postgresql.Driver
+      jpa:
+        hibernate:
+          ddl-auto: update
+        show-sql: false
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.PostgreSQLDialect
+      profiles:
+        active: kubernetes
+    
+    eureka:
+      client:
+        enabled: true
+        service-url:
+          defaultZone: http://service-discovery:8761/eureka/
+        register-with-eureka: true
+        fetch-registry: true
+      instance:
+        prefer-ip-address: true
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          show-details: always
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+        tags:
+          application: payment-service
+          environment: dev
+

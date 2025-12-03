@@ -1,12 +1,38 @@
+# Multi-stage build para optimizar tamaño e imagen
+FROM maven:3.8-openjdk-17-slim AS build
+WORKDIR /app
 
-FROM openjdk:11
-ARG PROJECT_VERSION=0.1.0
-RUN mkdir -p /home/app
-WORKDIR /home/app
-ENV SPRING_PROFILES_ACTIVE dev
-COPY proxy-client/ .
-ADD proxy-client/target/proxy-client-v${PROJECT_VERSION}.jar proxy-client.jar
-EXPOSE 8900
-ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE}", "-jar", "proxy-client.jar"]
+# Copiar pom.xml y descargar dependencias (capa cacheada)
+COPY pom.xml .
+RUN mvn dependency:go-offline -B || true
 
+# Copiar código fuente y construir
+COPY src ./src
+RUN mvn clean package -DskipTests
 
+# Imagen runtime optimizada y segura
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# Instalar wget para health checks
+RUN apk add --no-cache wget
+
+# Crear usuario no-root para seguridad
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
+# Copiar JAR desde build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Variables de entorno
+ENV SPRING_PROFILES_ACTIVE=kubernetes
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+
+# Health check para Kubernetes
+HEALTHCHECK --interval=30s --timeout=3s --start-period=90s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4200/actuator/health || exit 1
+
+EXPOSE 4200
+
+# Entrypoint optimizado
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]

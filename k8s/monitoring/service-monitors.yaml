@@ -1,0 +1,174 @@
+# ServiceMonitors para todos los microservicios
+# Estos ServiceMonitors permiten que Prometheus descubra y scrape las métricas de los servicios
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-gateway
+  namespace: dev
+  labels:
+    app: api-gateway
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: api-gateway
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: user-service
+  namespace: dev
+  labels:
+    app: user-service
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: user-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: product-service
+  namespace: dev
+  labels:
+    app: product-service
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: product-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: favourite-service
+  namespace: dev
+  labels:
+    app: favourite-service
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: favourite-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: order-service
+  namespace: dev
+  labels:
+    app: order-service
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: order-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: shipping-service
+  namespace: dev
+  labels:
+    app: shipping-service
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: shipping-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: payment-service
+  namespace: dev
+  labels:
+    app: payment-service
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: payment-service
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: service-discovery
+  namespace: dev
+  labels:
+    app: service-discovery
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: service-discovery
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cloud-config-server
+  namespace: dev
+  labels:
+    app: cloud-config-server
+    metrics: enabled
+spec:
+  selector:
+    matchLabels:
+      app: cloud-config-server
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+

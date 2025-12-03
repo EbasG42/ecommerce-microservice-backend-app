@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    environment: development
+    project: ecommerce
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: qa
+  labels:
+    environment: qa
+    project: ecommerce
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+  labels:
+    environment: production
+    project: ecommerce

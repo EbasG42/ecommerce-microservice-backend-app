@@ -1,0 +1,134 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ecommerce-alerts
+  namespace: monitoring
+  labels:
+    app: ecommerce
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: ecommerce.service
+    interval: 30s
+    rules:
+    # Alerta: Servicio caído
+    - alert: ServiceDown
+      expr: up{job=~".*-service|api-gateway|service-discovery|cloud-config-server"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Servicio {{ $labels.job }} está caído"
+        description: "El servicio {{ $labels.job }} en el namespace {{ $labels.namespace }} no está respondiendo desde hace más de 1 minuto."
+    
+    # Alerta: Alta tasa de errores HTTP 5xx
+    - alert: HighErrorRate
+      expr: |
+        (
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (service, namespace)
+          /
+          sum(rate(http_server_requests_seconds_count[5m])) by (service, namespace)
+        ) > 0.05
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Alta tasa de errores en {{ $labels.service }}"
+        description: "El servicio {{ $labels.service }} tiene una tasa de errores HTTP 5xx del {{ $value | humanizePercentage }} (umbral: 5%)"
+    
+    # Alerta: Tiempo de respuesta alto (p95)
+    - alert: HighResponseTime
+      expr: |
+        histogram_quantile(0.95,
+          sum(rate(http_server_requests_seconds_bucket[5m])) by (le, service, namespace)
+        ) > 1.0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Tiempo de respuesta alto en {{ $labels.service }}"
+        description: "El p95 del tiempo de respuesta del servicio {{ $labels.service }} es {{ $value }}s (umbral: 1s)"
+    
+    # Alerta: Uso alto de memoria
+    - alert: HighMemoryUsage
+      expr: |
+        (
+          sum(container_memory_working_set_bytes{pod=~".*-service.*|api-gateway.*"}) by (pod, namespace)
+          /
+          sum(container_spec_memory_limit_bytes{pod=~".*-service.*|api-gateway.*"}) by (pod, namespace)
+        ) > 0.90
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Uso alto de memoria en {{ $labels.pod }}"
+        description: "El pod {{ $labels.pod }} está usando el {{ $value | humanizePercentage }} de su límite de memoria"
+    
+    # Alerta: Uso alto de CPU
+    - alert: HighCPUUsage
+      expr: |
+        (
+          sum(rate(container_cpu_usage_seconds_total{pod=~".*-service.*|api-gateway.*"}[5m])) by (pod, namespace)
+          /
+          sum(container_spec_cpu_quota{pod=~".*-service.*|api-gateway.*"} / container_spec_cpu_period{pod=~".*-service.*|api-gateway.*"}) by (pod, namespace)
+        ) > 0.80
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Uso alto de CPU en {{ $labels.pod }}"
+        description: "El pod {{ $labels.pod }} está usando el {{ $value | humanizePercentage }} de su límite de CPU"
+    
+    # Alerta: Pool de conexiones de base de datos agotado
+    - alert: DatabaseConnectionPoolExhausted
+      expr: |
+        (
+          hikari_connections_active{pool="HikariPool"}
+          /
+          hikari_connections_max{pool="HikariPool"}
+        ) > 0.90
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pool de conexiones agotado en {{ $labels.service }}"
+        description: "El pool de conexiones de base de datos del servicio {{ $labels.service }} está al {{ $value | humanizePercentage }} de su capacidad"
+    
+    # Alerta: JVM heap memory alta
+    - alert: HighJVMHeapUsage
+      expr: |
+        (
+          jvm_memory_used_bytes{area="heap"}
+          /
+          jvm_memory_max_bytes{area="heap"}
+        ) > 0.85
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Uso alto de heap JVM en {{ $labels.service }}"
+        description: "El heap JVM del servicio {{ $labels.service }} está al {{ $value | humanizePercentage }} de su capacidad máxima"
+    
+    # Alerta: Tasa de requests muy alta
+    - alert: HighRequestRate
+      expr: |
+        sum(rate(http_server_requests_seconds_count[5m])) by (service, namespace) > 1000
+      for: 5m
+      labels:
+        severity: info
+      annotations:
+        summary: "Alta tasa de requests en {{ $labels.service }}"
+        description: "El servicio {{ $labels.service }} está recibiendo {{ $value }} requests/segundo"
+    
+    # Alerta: Pods reiniciándose frecuentemente
+    - alert: PodRestartingFrequently
+      expr: |
+        rate(kube_pod_container_status_restarts_total[15m]) > 0
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod {{ $labels.pod }} reiniciándose frecuentemente"
+        description: "El pod {{ $labels.pod }} se ha reiniciado {{ $value }} veces en los últimos 15 minutos"
+

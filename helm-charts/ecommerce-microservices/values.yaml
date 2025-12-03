@@ -1,0 +1,229 @@
+# Valores por defecto para E-Commerce Microservices
+global:
+  namespace: dev
+  imageRegistry: docker.io
+  dockerUser: ebasg423
+  imageTag: "1.0.0"
+  imagePullPolicy: IfNotPresent
+  
+  # Configuración de Eureka
+  eureka:
+    enabled: true
+    url: "http://service-discovery:8761/eureka/"
+  
+  # Configuración de Cloud Config
+  cloudConfig:
+    enabled: true
+    url: "http://cloud-config-server:8888"
+  
+  # Recursos por defecto
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  # Security Context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+# Service Discovery (Eureka)
+serviceDiscovery:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/service-discovery"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8761
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Cloud Config Server
+cloudConfigServer:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/cloud-config-server"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8888
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# API Gateway
+apiGateway:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/api-gateway"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8080
+  replicas: 1
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# User Service
+userService:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/user-service"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8081
+  replicas: 1
+  database:
+    name: userdb
+    username: userservice
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Product Service
+productService:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/product-service"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8082
+  replicas: 1
+  database:
+    name: productdb
+    username: productservice
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Favourite Service
+favouriteService:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/favourite-service"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8083
+  replicas: 1
+  database:
+    name: favouritedb
+    username: favouriteservice
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Order Service
+orderService:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/order-service"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8084
+  replicas: 1
+  database:
+    name: orderdb
+    username: orderservice
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Shipping Service
+shippingService:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/shipping-service"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8085
+  replicas: 1
+  database:
+    name: shippingdb
+    username: shippingservice
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Payment Service
+paymentService:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/payment-service"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 8086
+  replicas: 1
+  database:
+    name: paymentdb
+    username: paymentservice
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+# Proxy Client
+proxyClient:
+  enabled: true
+  image:
+    repository: "{{ .Values.global.dockerUser }}/proxy-client"
+    tag: "{{ .Values.global.imageTag }}"
+  service:
+    type: ClusterIP
+    port: 4200
+  replicas: 1
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+

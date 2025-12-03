@@ -1,0 +1,49 @@
+# Valores para ambiente de Producción
+global:
+  namespace: prod
+  imageTag: "1.0.0"
+  imagePullPolicy: Always
+
+# En producción, usar más réplicas para alta disponibilidad
+apiGateway:
+  replicas: 3
+
+userService:
+  replicas: 3
+
+productService:
+  replicas: 3
+
+favouriteService:
+  replicas: 2
+
+orderService:
+  replicas: 3
+
+shippingService:
+  replicas: 2
+
+paymentService:
+  replicas: 3
+
+proxyClient:
+  replicas: 2
+
+# Recursos aumentados para producción
+global:
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+# Configuración de autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+

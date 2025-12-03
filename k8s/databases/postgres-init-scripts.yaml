@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: dev
+data:
+  init.sql: |
+    -- Crear bases de datos
+    CREATE DATABASE userdb;
+    CREATE DATABASE productdb;
+    CREATE DATABASE orderdb;
+    CREATE DATABASE paymentdb;
+    CREATE DATABASE shippingdb;
+    CREATE DATABASE favouritedb;
+    
+    -- Crear usuarios
+    CREATE USER userservice WITH PASSWORD 'userpass123';
+    CREATE USER productservice WITH PASSWORD 'productpass123';
+    CREATE USER orderservice WITH PASSWORD 'orderpass123';
+    CREATE USER paymentservice WITH PASSWORD 'paymentpass123';
+    CREATE USER shippingservice WITH PASSWORD 'shippingpass123';
+    CREATE USER favouriteservice WITH PASSWORD 'favouritepass123';
+    
+    -- Otorgar privilegios
+    GRANT ALL PRIVILEGES ON DATABASE userdb TO userservice;
+    GRANT ALL PRIVILEGES ON DATABASE productdb TO productservice;
+    GRANT ALL PRIVILEGES ON DATABASE orderdb TO orderservice;
+    GRANT ALL PRIVILEGES ON DATABASE paymentdb TO paymentservice;
+    GRANT ALL PRIVILEGES ON DATABASE shippingdb TO shippingservice;
+    GRANT ALL PRIVILEGES ON DATABASE favouritedb TO favouriteservice;
+

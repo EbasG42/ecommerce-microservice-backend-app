@@ -1,0 +1,41 @@
+# Valores para ambiente de QA
+global:
+  namespace: qa
+  imageTag: "latest"
+  imagePullPolicy: Always
+
+# En QA, usar más réplicas para pruebas de carga
+apiGateway:
+  replicas: 2
+
+userService:
+  replicas: 2
+
+productService:
+  replicas: 2
+
+favouriteService:
+  replicas: 2
+
+orderService:
+  replicas: 2
+
+shippingService:
+  replicas: 2
+
+paymentService:
+  replicas: 2
+
+proxyClient:
+  replicas: 1
+
+# Recursos estándar para QA
+global:
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+

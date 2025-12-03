@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-config-server-config
+  namespace: dev
+  labels:
+    app: cloud-config-server
+data:
+  application.yml: |
+    server:
+      port: 8888
+    
+    spring:
+      application:
+        name: cloud-config-server
+      cloud:
+        config:
+          server:
+            git:
+              uri: https://github.com/SelimHorri/ecommerce-microservice-backend-app
+              search-paths: config-repo
+              clone-on-start: true
+      profiles:
+        active: kubernetes
+    
+    eureka:
+      client:
+        enabled: false
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      endpoint:
+        health:
+          show-details: always
+

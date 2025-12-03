@@ -1,4 +1,3 @@
-
 server:
   servlet:
     context-path: /app
@@ -13,6 +12,17 @@ spring:
   profiles:
     active:
     - dev
+
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: ${EUREKA_CLIENT_REGISTER_WITH_EUREKA:true}
+    fetch-registry: ${EUREKA_CLIENT_FETCH_REGISTRY:true}
+  instance:
+    prefer-ip-address: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS:false}
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:proxy-client}
 
 resilience4j:
   circuitbreaker:
@@ -35,11 +45,3 @@ management:
   endpoint:
     health:
       show-details: always
-
-
-
-
-
-
-
-

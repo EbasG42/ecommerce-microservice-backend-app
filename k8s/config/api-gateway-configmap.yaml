@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+  namespace: dev
+  labels:
+    app: api-gateway
+data:
+  application.yml: |
+    server:
+      port: 8080
+    
+    spring:
+      application:
+        name: API-GATEWAY
+      cloud:
+        gateway:
+          routes:
+            - id: user-service
+              uri: lb://USER-SERVICE
+              predicates:
+                - Path=/user-service/**
+            - id: product-service
+              uri: lb://PRODUCT-SERVICE
+              predicates:
+                - Path=/product-service/**
+            - id: favourite-service
+              uri: lb://FAVOURITE-SERVICE
+              predicates:
+                - Path=/favourite-service/**
+            - id: order-service
+              uri: lb://ORDER-SERVICE
+              predicates:
+                - Path=/order-service/**
+            - id: shipping-service
+              uri: lb://SHIPPING-SERVICE
+              predicates:
+                - Path=/shipping-service/**
+            - id: payment-service
+              uri: lb://PAYMENT-SERVICE
+              predicates:
+                - Path=/payment-service/**
+      profiles:
+        active: kubernetes
+    
+    eureka:
+      client:
+        enabled: true
+        service-url:
+          defaultZone: http://service-discovery:8761/eureka/
+        register-with-eureka: true
+        fetch-registry: true
+      instance:
+        prefer-ip-address: true
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info,metrics,prometheus
+      endpoint:
+        health:
+          show-details: always
+      metrics:
+        export:
+          prometheus:
+            enabled: true
+        tags:
+          application: api-gateway
+          environment: dev
+

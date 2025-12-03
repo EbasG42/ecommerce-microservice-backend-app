@@ -1,0 +1,38 @@
+# Valores para instalar Jaeger con Helm
+# Uso: helm install jaeger jaegertracing/jaeger-operator -n tracing --create-namespace -f k8s/monitoring/jaeger-values.yaml
+
+# Configuración del operador de Jaeger
+operator:
+  enabled: true
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+# Configuración de Jaeger (all-in-one para desarrollo)
+# Para producción, usar estrategia production
+jaeger:
+  enabled: true
+  strategy: allInOne  # Para producción, usar: production
+  storage:
+    type: memory  # Para producción, usar: elasticsearch o cassandra
+    options:
+      memory:
+        max-traces: 50000
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+  service:
+    type: ClusterIP
+    ports:
+      query: 16686
+      collector: 14268
+      agent: 6831
+

@@ -1,0 +1,26 @@
+{{- range $service, $config := .Values }}
+{{- if and (hasKey $config "enabled") (eq $config.enabled true) (hasKey $config "service") }}
+{{- $serviceName := $service | lower | replace "Service" "-service" | replace "Gateway" "-gateway" | replace "Client" "-client" | replace "Discovery" "-discovery" | replace "Server" "-server" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    app: {{ $serviceName }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+spec:
+  type: {{ $config.service.type | default "ClusterIP" }}
+  ports:
+  - port: {{ $config.service.port }}
+    targetPort: {{ $config.service.port }}
+    protocol: TCP
+    name: http
+  selector:
+    app: {{ $serviceName }}
+{{- end }}
+{{- end }}
+

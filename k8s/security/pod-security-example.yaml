@@ -1,0 +1,94 @@
+# Ejemplo de Deployment con Pod Security Standards aplicados
+# Este es un template que debe ser aplicado a todos los deployments
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service-secure
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+        tier: business
+    spec:
+      # ServiceAccount específico para el servicio
+      serviceAccountName: user-service-sa
+      
+      # Security Context a nivel de Pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      
+      containers:
+      - name: user-service
+        image: ebasg42/user-service:1.0.0
+        
+        # Security Context a nivel de Container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        
+        # Volúmenes temporales para escritura
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: var-cache
+          mountPath: /var/cache
+        - name: var-log
+          mountPath: /var/log
+        
+        ports:
+        - containerPort: 8080
+          name: http
+        
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes"
+        - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+          value: "http://service-discovery:8761/eureka/"
+        - name: SPRING_CLOUD_CONFIG_URI
+          value: "http://cloud-config-server:8888"
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      
+      # Volúmenes temporales
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: var-cache
+        emptyDir: {}
+      - name: var-log
+        emptyDir: {}
+

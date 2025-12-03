@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-client-config
+  namespace: dev
+data:
+  application.yml: "server:\n  port: 4200\nspring:\n  application:\n    name: proxy-client\n\
+    \  cloud:\n    config:\n      uri: http://cloud-config-server:8888\neureka:\n\
+    \  client:\n    service-url:\n      defaultZone: http://service-discovery:8761/eureka/\n\
+    \  instance:\n    prefer-ip-address: true\nmanagement:\n  endpoints:\n    web:\n\
+    \      exposure:\n        include: health,info,metrics,prometheus\n  endpoint:\n\
+    \    health:\n      show-details: always\n      probes:\n        enabled: true\n\
+    \  metrics:\n    export:\n      prometheus:\n        enabled: true\n    tags:\n\
+    \      application: proxy-client\n      environment: dev\n"

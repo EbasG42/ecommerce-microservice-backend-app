@@ -619,3 +619,747 @@ If you would like to enhance, please:
 - Finally, give it a 🌟.
 
 *Happy Coding ...* 🙂
+---
+
+# Implementación en Kubernetes
+
+## 📋 Tabla de Contenidos
+
+- [Arquitectura del Proyecto](#arquitectura-del-proyecto)
+- [Características Implementadas](#características-implementadas)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Documentación](#documentación)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+
+---
+
+## 🏗️ Arquitectura del Proyecto
+
+El sistema está compuesto por 10 microservicios desplegados en Kubernetes:
+
+- **Service Discovery (Eureka)**: Registro y descubrimiento de servicios
+- **Cloud Config Server**: Gestión centralizada de configuración
+- **API Gateway**: Punto de entrada único para todos los servicios
+- **6 Servicios de Negocio**: User, Product, Favourite, Order, Shipping, Payment
+- **Proxy Client**: Aplicación frontend
+
+Ver documentación completa en [docs/architecture.md](docs/architecture.md)
+
+---
+
+## ✨ Características Implementadas
+
+### 1. Arquitectura e Infraestructura (15%)
+- ✅ 10 microservicios desplegados en Kubernetes
+- ✅ Namespaces para ambientes (dev, qa, prod)
+- ✅ Dependencias entre servicios respetadas
+- ✅ Documentación completa con diagramas
+
+### 2. Configuración de Red y Seguridad (15%)
+- ✅ Servicios Kubernetes (ClusterIP, NodePort)
+- ✅ Ingress Controller con TLS/HTTPS
+- ✅ Network Policies (Zero Trust)
+- ✅ RBAC completo (ServiceAccounts, Roles, RoleBindings)
+- ✅ Pod Security Standards
+- ✅ Escaneo de vulnerabilidades (Trivy)
+
+### 3. Gestión de Configuración y Secretos (10%)
+- ✅ ConfigMaps para todos los servicios
+- ✅ Secrets para credenciales
+- ✅ Rotación de secretos automatizada
+- ✅ Cloud Config Server para gestión centralizada
+
+### 4. Estrategias de Despliegue y CI/CD (15%)
+- ✅ Pipeline CI/CD completo con GitHub Actions
+- ✅ Canary Deployments
+- ✅ Blue-Green Deployments
+- ✅ Rollback automatizado
+- ✅ Helm Charts para gestión de releases
+- ✅ Smoke tests integrados
+
+### 5. Almacenamiento y Persistencia (10%)
+- ✅ PersistentVolumes y PersistentVolumeClaims
+- ✅ StorageClass configurada
+- ✅ Backups automatizados (CronJobs)
+- ✅ Scripts de backup y restauración
+
+### 6. Observabilidad y Monitoreo (15%)
+- ✅ Prometheus + Grafana
+- ✅ ServiceMonitors para todos los servicios
+- ✅ Alertas configuradas (9 alertas)
+- ✅ Logging centralizado (Loki)
+- ✅ Tracing distribuido (Jaeger)
+- ✅ Dashboards personalizados en Grafana
+
+### 7. Autoscaling y Pruebas de Rendimiento (10%)
+- ✅ Horizontal Pod Autoscaler (HPA) para todos los servicios
+- ✅ KEDA para escalado basado en eventos
+- ✅ Pruebas de carga con Locust y JMeter
+- ✅ Quality of Service (QoS) classes
+
+### 8. Documentación y Presentación (10%)
+- ✅ Documentación técnica completa
+- ✅ README organizado
+- ✅ Manual de operaciones
+- ✅ Guion para video demostrativo
+
+---
+
+## 📦 Requisitos
+
+### Software Requerido
+
+- **Kubernetes**: 1.28+ (Minikube, Kind, o clúster cloud)
+- **kubectl**: 1.28+
+- **Helm**: 3.12+
+- **Docker**: 20.10+
+- **Maven**: 3.8+ (para compilar servicios)
+- **Java**: 17+
+
+### Recursos del Sistema
+
+- **CPU**: Mínimo 4 cores (recomendado 8+)
+- **RAM**: Mínimo 8GB (recomendado 16GB+)
+- **Almacenamiento**: Mínimo 50GB libre
+
+---
+
+## 🚀 Instalación en Kubernetes
+
+### 1. Configurar Kubernetes
+
+#### Con Minikube
+
+```bash
+# Iniciar Minikube
+minikube start --memory=8192 --cpus=4
+
+# Habilitar addons necesarios
+minikube addons enable ingress
+minikube addons enable metrics-server
+```
+
+### 2. Construir Imágenes Docker
+
+```bash
+# Configurar Docker para usar Minikube (si aplica)
+eval $(minikube docker-env)
+
+# Construir imágenes
+./scripts/build-all-images.sh
+```
+
+### 3. Desplegar el Sistema
+
+```bash
+# Desplegar todo el stack
+./scripts/deploy-all.sh dev
+
+# Verificar estado
+./scripts/health-check.sh dev
+```
+
+### 4. Instalar Observabilidad (Opcional)
+
+```bash
+# Instalar stack de observabilidad
+./scripts/install-monitoring-minikube.sh
+```
+
+---
+
+## 💻 Uso
+
+### Acceder a los Servicios
+
+#### API Gateway
+
+```bash
+# Port-forward
+kubectl port-forward -n dev svc/api-gateway 8080:8080
+
+# Acceder
+curl http://localhost:8080/user-service/api/users
+```
+
+#### Service Discovery (Eureka)
+
+```bash
+# Port-forward
+kubectl port-forward -n dev svc/service-discovery 8761:8761
+
+# Acceder en navegador
+# http://localhost:8761
+```
+
+#### Frontend
+
+```bash
+# Port-forward
+kubectl port-forward -n dev svc/proxy-client 4200:4200
+
+# Acceder en navegador
+# http://localhost:4200/app/
+```
+
+#### Grafana
+
+```bash
+# Obtener contraseña
+kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath='{.data.admin-password}' | base64 -d
+
+# Port-forward
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
+
+# Acceder en navegador
+# http://localhost:3000
+# Usuario: admin
+```
+
+#### Prometheus
+
+```bash
+# Port-forward
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+
+# Acceder en navegador
+# http://localhost:9090
+```
+
+### Comandos Útiles
+
+```bash
+# Ver estado de pods
+kubectl get pods -n dev
+
+# Ver logs de un servicio
+kubectl logs -n dev -l app=user-service --tail=100
+
+# Escalar un servicio
+kubectl scale deployment user-service --replicas=3 -n dev
+
+# Ver métricas de HPA
+kubectl get hpa -n dev
+
+# Ejecutar backup manual
+./scripts/backup-database.sh
+
+# Listar backups
+./scripts/list-backups.sh
+
+# Restaurar desde backup
+./scripts/restore-database.sh <backup-file>
+```
+
+---
+
+## 📚 Documentación
+
+### Documentación Principal
+
+- **[Arquitectura](docs/architecture.md)**: Documentación completa de la arquitectura del sistema
+- **[Comparación de Arquitecturas](docs/ARCHITECTURE_COMPARISON.md)**: Comparación entre arquitectura original y Kubernetes
+- **[Manual de Operaciones](docs/OPERATIONS_MANUAL.md)**: Guía completa de operaciones del sistema
+
+### Guías Específicas
+
+- **CI/CD**: Ver [INSTRUCCIONES_CONFIGURACION_CICD.md](INSTRUCCIONES_CONFIGURACION_CICD.md)
+- **Monitoreo**: Ver [INSTRUCCIONES_MONITOREO_MINIKUBE.md](INSTRUCCIONES_MONITOREO_MINIKUBE.md)
+- **Acceso a Servicios**: Ver [GUIA_ACCESO_SERVICIOS.md](GUIA_ACCESO_SERVICIOS.md)
+
+---
+
+## 📁 Estructura del Proyecto Kubernetes
+
+```
+ecommerce-microservice-backend-app/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yaml              # Pipeline CI/CD
+├── docs/
+│   ├── architecture.md             # Documentación de arquitectura
+│   ├── ARCHITECTURE_COMPARISON.md  # Comparación de arquitecturas
+│   └── OPERATIONS_MANUAL.md        # Manual de operaciones
+├── helm-charts/
+│   └── ecommerce-microservices/    # Helm Charts
+├── k8s/
+│   ├── autoscaling/                # HPA y KEDA
+│   ├── backups/                    # CronJobs de backup
+│   ├── config/                     # ConfigMaps
+│   ├── databases/                  # PostgreSQL
+│   ├── ingress/                    # Ingress resources
+│   ├── monitoring/                 # Prometheus, Grafana, Loki, Jaeger
+│   ├── network-policies/           # Network Policies
+│   ├── rbac/                       # RBAC
+│   ├── secrets/                    # Secrets
+│   ├── security/                   # Pod Security Standards
+│   ├── services/                   # Deployments y Services
+│   └── storage/                    # StorageClasses y PVCs
+├── scripts/
+│   ├── backup-database.sh          # Backup manual
+│   ├── blue-green-deploy.sh        # Blue-Green deployment
+│   ├── canary-deploy.sh            # Canary deployment
+│   ├── deploy-all.sh               # Despliegue completo
+│   ├── health-check.sh             # Health checks
+│   ├── install-monitoring-minikube.sh  # Instalar observabilidad
+│   ├── restore-database.sh         # Restaurar backup
+│   ├── rollback.sh                 # Rollback automatizado
+│   └── smoke-tests.sh              # Smoke tests
+└── tests/
+    ├── locustfile.py               # Pruebas de carga con Locust
+    └── jmeter-test-plan.jmx        # Pruebas de carga con JMeter
+```
+
+---
+
+## 🧪 Pruebas
+
+### Pruebas de Carga
+
+#### Con Locust
+
+```bash
+# Instalar Locust
+pip install locust
+
+# Ejecutar pruebas
+locust -f tests/locustfile.py --host=http://localhost:8080
+```
+
+#### Con JMeter
+
+```bash
+# Ejecutar pruebas
+jmeter -n -t tests/jmeter-test-plan.jmx -l results.jtl
+```
+
+### Smoke Tests
+
+```bash
+# Ejecutar smoke tests
+./scripts/smoke-tests.sh dev
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Problemas Comunes
+
+#### Pods no inician
+
+```bash
+# Ver logs
+kubectl logs -n dev <pod-name>
+
+# Describir pod
+kubectl describe pod -n dev <pod-name>
+
+# Ver eventos
+kubectl get events -n dev --sort-by='.lastTimestamp'
+```
+
+#### Servicios no se registran en Eureka
+
+```bash
+# Verificar Service Discovery
+kubectl get pods -n dev -l app=service-discovery
+
+# Ver logs de Eureka
+kubectl logs -n dev -l app=service-discovery
+
+# Verificar configuración
+kubectl get configmap service-discovery-config -n dev -o yaml
+```
+
+#### Problemas de conectividad
+
+```bash
+# Verificar Network Policies
+kubectl get networkpolicies -n dev
+
+# Verificar Services
+kubectl get svc -n dev
+
+# Probar conectividad desde un pod
+kubectl run -it --rm debug --image=busybox --restart=Never -n dev -- sh
+```
+
+---
+
+**Última actualización:** 2 de Diciembre, 2025
+
+---
+
+# Implementación en Kubernetes
+
+## 📋 Tabla de Contenidos
+
+- [Arquitectura del Proyecto](#arquitectura-del-proyecto)
+- [Características Implementadas](#características-implementadas)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Documentación](#documentación)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+
+---
+
+## 🏗️ Arquitectura del Proyecto
+
+El sistema está compuesto por 10 microservicios desplegados en Kubernetes:
+
+- **Service Discovery (Eureka)**: Registro y descubrimiento de servicios
+- **Cloud Config Server**: Gestión centralizada de configuración
+- **API Gateway**: Punto de entrada único para todos los servicios
+- **6 Servicios de Negocio**: User, Product, Favourite, Order, Shipping, Payment
+- **Proxy Client**: Aplicación frontend
+
+Ver documentación completa en [docs/architecture.md](docs/architecture.md)
+
+---
+
+## ✨ Características Implementadas
+
+### 1. Arquitectura e Infraestructura (15%)
+- ✅ 10 microservicios desplegados en Kubernetes
+- ✅ Namespaces para ambientes (dev, qa, prod)
+- ✅ Dependencias entre servicios respetadas
+- ✅ Documentación completa con diagramas
+
+### 2. Configuración de Red y Seguridad (15%)
+- ✅ Servicios Kubernetes (ClusterIP, NodePort)
+- ✅ Ingress Controller con TLS/HTTPS
+- ✅ Network Policies (Zero Trust)
+- ✅ RBAC completo (ServiceAccounts, Roles, RoleBindings)
+- ✅ Pod Security Standards
+- ✅ Escaneo de vulnerabilidades (Trivy)
+
+### 3. Gestión de Configuración y Secretos (10%)
+- ✅ ConfigMaps para todos los servicios
+- ✅ Secrets para credenciales
+- ✅ Rotación de secretos automatizada
+- ✅ Cloud Config Server para gestión centralizada
+
+### 4. Estrategias de Despliegue y CI/CD (15%)
+- ✅ Pipeline CI/CD completo con GitHub Actions
+- ✅ Canary Deployments
+- ✅ Blue-Green Deployments
+- ✅ Rollback automatizado
+- ✅ Helm Charts para gestión de releases
+- ✅ Smoke tests integrados
+
+### 5. Almacenamiento y Persistencia (10%)
+- ✅ PersistentVolumes y PersistentVolumeClaims
+- ✅ StorageClass configurada
+- ✅ Backups automatizados (CronJobs)
+- ✅ Scripts de backup y restauración
+
+### 6. Observabilidad y Monitoreo (15%)
+- ✅ Prometheus + Grafana
+- ✅ ServiceMonitors para todos los servicios
+- ✅ Alertas configuradas (9 alertas)
+- ✅ Logging centralizado (Loki)
+- ✅ Tracing distribuido (Jaeger)
+- ✅ Dashboards personalizados en Grafana
+
+### 7. Autoscaling y Pruebas de Rendimiento (10%)
+- ✅ Horizontal Pod Autoscaler (HPA) para todos los servicios
+- ✅ KEDA para escalado basado en eventos
+- ✅ Pruebas de carga con Locust y JMeter
+- ✅ Quality of Service (QoS) classes
+
+### 8. Documentación y Presentación (10%)
+- ✅ Documentación técnica completa
+- ✅ README organizado
+- ✅ Manual de operaciones
+- ✅ Guion para video demostrativo
+
+---
+
+## 📦 Requisitos
+
+### Software Requerido
+
+- **Kubernetes**: 1.28+ (Minikube, Kind, o clúster cloud)
+- **kubectl**: 1.28+
+- **Helm**: 3.12+
+- **Docker**: 20.10+
+- **Maven**: 3.8+ (para compilar servicios)
+- **Java**: 17+
+
+### Recursos del Sistema
+
+- **CPU**: Mínimo 4 cores (recomendado 8+)
+- **RAM**: Mínimo 8GB (recomendado 16GB+)
+- **Almacenamiento**: Mínimo 50GB libre
+
+---
+
+## 🚀 Instalación en Kubernetes
+
+### 1. Configurar Kubernetes
+
+#### Con Minikube
+
+```bash
+# Iniciar Minikube
+minikube start --memory=8192 --cpus=4
+
+# Habilitar addons necesarios
+minikube addons enable ingress
+minikube addons enable metrics-server
+```
+
+### 2. Construir Imágenes Docker
+
+```bash
+# Configurar Docker para usar Minikube (si aplica)
+eval $(minikube docker-env)
+
+# Construir imágenes
+./scripts/build-all-images.sh
+```
+
+### 3. Desplegar el Sistema
+
+```bash
+# Desplegar todo el stack
+./scripts/deploy-all.sh dev
+
+# Verificar estado
+./scripts/health-check.sh dev
+```
+
+### 4. Instalar Observabilidad (Opcional)
+
+```bash
+# Instalar stack de observabilidad
+./scripts/install-monitoring-minikube.sh
+```
+
+---
+
+## 💻 Uso
+
+### Acceder a los Servicios
+
+#### API Gateway
+
+```bash
+# Port-forward
+kubectl port-forward -n dev svc/api-gateway 8080:8080
+
+# Acceder
+curl http://localhost:8080/user-service/api/users
+```
+
+#### Service Discovery (Eureka)
+
+```bash
+# Port-forward
+kubectl port-forward -n dev svc/service-discovery 8761:8761
+
+# Acceder en navegador
+# http://localhost:8761
+```
+
+#### Frontend
+
+```bash
+# Port-forward
+kubectl port-forward -n dev svc/proxy-client 4200:4200
+
+# Acceder en navegador
+# http://localhost:4200/app/
+```
+
+#### Grafana
+
+```bash
+# Obtener contraseña
+kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath='{.data.admin-password}' | base64 -d
+
+# Port-forward
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-grafana 3000:80
+
+# Acceder en navegador
+# http://localhost:3000
+# Usuario: admin
+```
+
+#### Prometheus
+
+```bash
+# Port-forward
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+
+# Acceder en navegador
+# http://localhost:9090
+```
+
+### Comandos Útiles
+
+```bash
+# Ver estado de pods
+kubectl get pods -n dev
+
+# Ver logs de un servicio
+kubectl logs -n dev -l app=user-service --tail=100
+
+# Escalar un servicio
+kubectl scale deployment user-service --replicas=3 -n dev
+
+# Ver métricas de HPA
+kubectl get hpa -n dev
+
+# Ejecutar backup manual
+./scripts/backup-database.sh
+
+# Listar backups
+./scripts/list-backups.sh
+
+# Restaurar desde backup
+./scripts/restore-database.sh <backup-file>
+```
+
+---
+
+## 📚 Documentación
+
+### Documentación Principal
+
+- **[Arquitectura](docs/architecture.md)**: Documentación completa de la arquitectura del sistema
+- **[Comparación de Arquitecturas](docs/ARCHITECTURE_COMPARISON.md)**: Comparación entre arquitectura original y Kubernetes
+- **[Manual de Operaciones](docs/OPERATIONS_MANUAL.md)**: Guía completa de operaciones del sistema
+
+### Guías Específicas
+
+- **CI/CD**: Ver [INSTRUCCIONES_CONFIGURACION_CICD.md](INSTRUCCIONES_CONFIGURACION_CICD.md)
+- **Monitoreo**: Ver [INSTRUCCIONES_MONITOREO_MINIKUBE.md](INSTRUCCIONES_MONITOREO_MINIKUBE.md)
+- **Acceso a Servicios**: Ver [GUIA_ACCESO_SERVICIOS.md](GUIA_ACCESO_SERVICIOS.md)
+
+---
+
+## 📁 Estructura del Proyecto Kubernetes
+
+```
+ecommerce-microservice-backend-app/
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yaml              # Pipeline CI/CD
+├── docs/
+│   ├── architecture.md             # Documentación de arquitectura
+│   ├── ARCHITECTURE_COMPARISON.md  # Comparación de arquitecturas
+│   └── OPERATIONS_MANUAL.md        # Manual de operaciones
+├── helm-charts/
+│   └── ecommerce-microservices/    # Helm Charts
+├── k8s/
+│   ├── autoscaling/                # HPA y KEDA
+│   ├── backups/                    # CronJobs de backup
+│   ├── config/                     # ConfigMaps
+│   ├── databases/                  # PostgreSQL
+│   ├── ingress/                    # Ingress resources
+│   ├── monitoring/                 # Prometheus, Grafana, Loki, Jaeger
+│   ├── network-policies/           # Network Policies
+│   ├── rbac/                       # RBAC
+│   ├── secrets/                    # Secrets
+│   ├── security/                   # Pod Security Standards
+│   ├── services/                   # Deployments y Services
+│   └── storage/                    # StorageClasses y PVCs
+├── scripts/
+│   ├── backup-database.sh          # Backup manual
+│   ├── blue-green-deploy.sh        # Blue-Green deployment
+│   ├── canary-deploy.sh            # Canary deployment
+│   ├── deploy-all.sh               # Despliegue completo
+│   ├── health-check.sh             # Health checks
+│   ├── install-monitoring-minikube.sh  # Instalar observabilidad
+│   ├── restore-database.sh         # Restaurar backup
+│   ├── rollback.sh                 # Rollback automatizado
+│   └── smoke-tests.sh              # Smoke tests
+└── tests/
+    ├── locustfile.py               # Pruebas de carga con Locust
+    └── jmeter-test-plan.jmx        # Pruebas de carga con JMeter
+```
+
+---
+
+## 🧪 Pruebas
+
+### Pruebas de Carga
+
+#### Con Locust
+
+```bash
+# Instalar Locust
+pip install locust
+
+# Ejecutar pruebas
+locust -f tests/locustfile.py --host=http://localhost:8080
+```
+
+#### Con JMeter
+
+```bash
+# Ejecutar pruebas
+jmeter -n -t tests/jmeter-test-plan.jmx -l results.jtl
+```
+
+### Smoke Tests
+
+```bash
+# Ejecutar smoke tests
+./scripts/smoke-tests.sh dev
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Problemas Comunes
+
+#### Pods no inician
+
+```bash
+# Ver logs
+kubectl logs -n dev <pod-name>
+
+# Describir pod
+kubectl describe pod -n dev <pod-name>
+
+# Ver eventos
+kubectl get events -n dev --sort-by='.lastTimestamp'
+```
+
+#### Servicios no se registran en Eureka
+
+```bash
+# Verificar Service Discovery
+kubectl get pods -n dev -l app=service-discovery
+
+# Ver logs de Eureka
+kubectl logs -n dev -l app=service-discovery
+
+# Verificar configuración
+kubectl get configmap service-discovery-config -n dev -o yaml
+```
+
+#### Problemas de conectividad
+
+```bash
+# Verificar Network Policies
+kubectl get networkpolicies -n dev
+
+# Verificar Services
+kubectl get svc -n dev
+
+# Probar conectividad desde un pod
+kubectl run -it --rm debug --image=busybox --restart=Never -n dev -- sh
+```
+
+---
+
+**Última actualización:** 2 de Diciembre, 2025
+

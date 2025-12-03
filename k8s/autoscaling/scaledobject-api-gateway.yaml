@@ -1,0 +1,26 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: api-gateway-scaler
+  namespace: dev
+  labels:
+    app: api-gateway
+spec:
+  scaleTargetRef:
+    name: api-gateway
+  minReplicaCount: 2
+  maxReplicaCount: 10
+  cooldownPeriod: 60
+  pollingInterval: 30
+  triggers:
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+      metricName: http_requests_per_second
+      threshold: '100'
+      query: sum(rate(http_server_requests_seconds_count{application="API-GATEWAY",namespace="dev"}[1m]))
+  - type: cpu
+    metadata:
+      type: Utilization
+      value: '70'
+

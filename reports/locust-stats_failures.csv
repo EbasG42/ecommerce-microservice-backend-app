@@ -1,0 +1,9 @@
+Method,Name,Error,Occurrences
+GET,Get Users,"ConnectionRefusedError(111, 'Connection refused')",72
+GET,Get Products,"ConnectionRefusedError(111, 'Connection refused')",79
+GET,Get Order by ID,"ConnectionRefusedError(111, 'Connection refused')",28
+GET,Get Product by ID,"ConnectionRefusedError(111, 'Connection refused')",50
+GET,Get Orders,"ConnectionRefusedError(111, 'Connection refused')",23
+GET,Health Check,"ConnectionRefusedError(111, 'Connection refused')",29
+GET,Get User by ID,"ConnectionRefusedError(111, 'Connection refused')",16
+GET,Get Favourites,"ConnectionRefusedError(111, 'Connection refused')",21

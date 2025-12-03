@@ -1,0 +1,41 @@
+# Valores para ambiente de Desarrollo
+global:
+  namespace: dev
+  imageTag: "latest"
+  imagePullPolicy: IfNotPresent
+
+# En desarrollo, usar menos réplicas
+apiGateway:
+  replicas: 1
+
+userService:
+  replicas: 1
+
+productService:
+  replicas: 1
+
+favouriteService:
+  replicas: 1
+
+orderService:
+  replicas: 1
+
+shippingService:
+  replicas: 1
+
+paymentService:
+  replicas: 1
+
+proxyClient:
+  replicas: 1
+
+# Recursos reducidos para desarrollo
+global:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "250m"
+
